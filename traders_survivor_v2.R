@@ -32,14 +32,10 @@ colnames(ecomony) <- c("sucesso","memoria","tem_validador","typeAgnostic","secur
 
 as.data.frame(ecomony)
 
-#ecomony = read_csv("../Traders/data.csv",
-#                   col_names = TRUE, col_types = cols(honestidade = col_number(),
-#                                                      sucesso = col_integer(),
-#                                                      memoria = col_integer(),
-#                                                      tem_validador = col_character(),
-#                                                      validador_n_eh_conhecido = col_integer()))
-#
-# Remove jobs idênticos no mesmo build
+ecomony <- cobertura(ecomony, 
+                     sample_size = 200, 
+                     experiments = 1000)
+
 ecomony_2 = ecomony %>% 
   mutate(profile = case_when(
     tem_validador == 1 & typeAgnostic == 0 & securityDeposit == 0 & hasFeedback == 0 ~ "A",
@@ -87,7 +83,7 @@ ecomony_3 = ecomony %>%
   summarise(uniq = (mean(uniqueValidators)),total = n()) 
 
 ecomony_3
-ggplot(data=ecomony_3, aes(y=uniq,x=honestidade*100,ymax = if_else(uniq==100,uniq,uniq*0.95), ymin = if_else(uniq*1.05+0.05<100,if_else(uniq==0,0,uniq*1.05+0.05),100), fill=profile))  +
+ggplot(data=ecomony_3, aes(y=uniq,x=honestidade*100,ymax = lower, ymin = upper, fill=profile))  +
   geom_bar(stat="identity", position=position_dodge(),color="white")+
   geom_text(aes(label=format(round(uniq, 1), nsmall = 1),hjust=profile_count    ), vjust=-0.2, color="black", size=3.5)+
   geom_errorbar(position=position_dodge(8.6))  +
@@ -113,7 +109,7 @@ ggplot(data=ecomony_3, aes(y=uniq,x=honestidade*100,ymax = if_else(uniq==100,uni
 
 
 ecomony_2
-ggplot(data=ecomony_2, aes(y=acertou*100,x=honestidade*100,ymax = if_else(acertou==1,acertou*100,acertou*97.5), ymin = if_else(acertou*102.5+2.5<100,if_else(acertou==0,0,acertou*102.5+2.5),100),  fill=profile))  +
+ggplot(data=ecomony_2, aes(y=acertou*100,x=honestidade*100,ymax = lower, ymin = upper,  fill=profile))  +
   geom_bar(stat="identity", position=position_dodge(),color="white")+
   geom_text(aes(label=format(round(acertou*100, 1), nsmall = 1) ),  vjust=-0.1, color="black", size=3.5)+
   geom_errorbar(position=position_dodge(8.6))  +
@@ -135,25 +131,3 @@ ggplot(data=ecomony_2, aes(y=acertou*100,x=honestidade*100,ymax = if_else(acerto
         panel.border=element_blank())+
   scale_x_continuous(breaks = seq(10, 90, by = 10),limits=c(0, 100)) +
   scale_fill_grey()
-
-#data = ecomony %>% 
-#  filter(honestidade <= 0.9)
-#data %>% tibble() %>%
-#  group_by(honestidade, tem_validador) %>% 
-#  summarise(acertou = (sum(sucesso)/n())*100,total = n()) 
-
-#experimento_cobertura = cobertura(data, 
-#                                  sample_size = 10, 
-#                                  experiments = 10)
-
-
-#experimento_cobertura
-
-#cis_com_cobertura = experimento_cobertura %>% 
-#  mutate(acertou = mean(data) <= upper & mean(data) >= lower)
-#cis_com_cobertura %>% 
-#  ggplot(aes(x = honestidade, ymax = upper, ymin = lower, color = tem_validador)) + 
-#  geom_hline(yintercept = mean(data)) + 
-#  geom_errorbar() + 
-#  facet_grid(. ~ type)
-
